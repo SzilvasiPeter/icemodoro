@@ -1,0 +1,16 @@
+[package]
+name = "icemodoro"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+iced = { version = "0.13.1", features = ["smol", "image"] }
+iced_aw = { version = "0.12.2", features = ["number_input", "tabs"] }
+
+notify-rust = "4.11.7"
+
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+directories-next = "2.0"
+rfd = "0.15"
