@@ -1,3 +1,5 @@
+//! Manages the report generating, storing, and viewing productivity reports, including streaks and focused time.
+
 use super::persistence;
 
 use iced::time::Duration;
@@ -7,14 +9,15 @@ use iced::{Center, Element, Length};
 use chrono::{Days, NaiveDate};
 use serde::{Deserialize, Serialize};
 
-// TODO: Add documentation
+/// Represents the productivity data collected for a single day.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DayReport {
-    today: NaiveDate,
+    date: NaiveDate,
     focused: Duration,
     completed: usize,
 }
 
+/// Stores the complete Pomodoro usage history and summary statistics.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Report {
     history: Vec<DayReport>,
@@ -32,37 +35,44 @@ impl Default for Report {
     }
 }
 
+/// Messages used for updating the report tab.
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
-    Generate { completed: usize, focused: Duration },
+    Generate { focused: Duration, completed: usize },
     Clear,
     Import,
     Export,
 }
 
 impl Report {
+    /// Loads the report state from persistent storage or returns default.
     pub fn new() -> Self {
         persistence::load("reports.json").unwrap_or_default()
     }
 
+    /// Processes messages and updates the component's state.
     pub fn update(&mut self, message: Message) {
         match message {
             Message::Generate { completed, focused } => {
                 let today = chrono::Local::now().date_naive();
-                let current_focused = match self.history.iter_mut().find(|r| r.today == today) {
+
+                let current_focused = match self.history.iter_mut().find(|r| r.date == today) {
+                    // Found today's report, update focused/completed values.
                     Some(report) => {
                         report.focused += focused;
                         report.completed += completed;
                         report.focused
                     }
+                    // New day, add new report.
                     None => {
                         self.history.push(DayReport {
-                            today,
+                            date: today,
                             focused,
                             completed,
                         });
-                        self.history.sort_by_key(|r| r.today);
+                        self.history.sort_by_key(|r| r.date);
 
+                        // Update longest streak if current streak is longer
                         let streak = self.calculate_current_streak(today);
                         if streak > self.longest_streak {
                             self.longest_streak = streak;
@@ -85,29 +95,28 @@ impl Report {
                 persistence::save("reports.json", &self).ok();
             }
             Message::Import => {
+                // TODO: Show error message on the view
                 if let Ok(imported_data) = persistence::import::<Self>("reports.json") {
                     *self = imported_data;
                 }
             }
             Message::Export => {
+                // TODO: Show error message on the view
                 persistence::export(&self).ok();
             }
         }
     }
 
+    /// Calculates the current number of consecutive days with a report, ending with `today`.
     fn calculate_current_streak(&self, today: NaiveDate) -> usize {
         let history = &self.history;
-
-        if !history.iter().any(|r| r.today == today) {
-            return 0;
-        }
-
         let mut day_streak = 0;
         let mut expected_date = Some(today);
 
+        // Iterate backward through the history to check for continuity.
         for report in history.iter().rev() {
             match expected_date {
-                Some(date) if report.today == date => {
+                Some(date) if report.date == date => {
                     day_streak += 1;
                     expected_date = date.checked_sub_days(Days::new(1));
                 }
@@ -118,6 +127,7 @@ impl Report {
         day_streak
     }
 
+    /// Builds the report summary, history table, and control buttons.
     pub fn view(&self) -> Element<'_, Message> {
         let content = if self.history.is_empty() {
             column![
@@ -129,7 +139,7 @@ impl Report {
         } else {
             let today = chrono::Local::now().date_naive();
             let day_streak = self.calculate_current_streak(today);
-            let focused_today = match self.history.iter().find(|r| r.today == today) {
+            let focused_today = match self.history.iter().find(|r| r.date == today) {
                 Some(r) => r.focused,
                 None => Duration::from_secs(0),
             };
@@ -172,13 +182,14 @@ impl Report {
             ]
             .spacing(10);
 
+            // Generate report rows from history, showing most recent first.
             let report_rows: Vec<Element<_>> = self
                 .history
                 .iter()
-                .rev() // Show the most recent first
+                .rev()
                 .map(|report| {
                     row![
-                        text(report.today.format("%Y-%m-%d").to_string()).width(Length::Fill),
+                        text(report.date.format("%Y-%m-%d").to_string()).width(Length::Fill),
                         text(format_duration(report.focused)).width(Length::Fill),
                         text(report.completed.to_string())
                             .width(Length::Fill)
@@ -224,6 +235,7 @@ impl Report {
     }
 }
 
+/// Formats a `Duration` into an `HH:MM:SS` string.
 fn format_duration(duration: Duration) -> String {
     let total_secs = duration.as_secs();
     let hours = total_secs / 3600;

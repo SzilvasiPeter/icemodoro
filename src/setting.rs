@@ -1,3 +1,5 @@
+//! Manages application settings, including themes, timer durations, and keyboard shortcuts.
+
 use super::persistence;
 
 use iced::widget::{button, column, container, horizontal_rule, radio, row, scrollable, text};
@@ -6,7 +8,7 @@ use iced_aw::widget::number_input;
 
 use serde::{Deserialize, Serialize};
 
-// TODO: Add documentation
+/// Defines the color themes available in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AppTheme {
     CatppuccinFrappe,
@@ -22,6 +24,7 @@ pub enum AppTheme {
 }
 
 impl AppTheme {
+    /// Converts the custom `AppTheme` into the corresponding `iced::Theme`.
     pub fn to_iced_theme(self) -> Theme {
         match self {
             AppTheme::CatppuccinFrappe => Theme::CatppuccinFrappe,
@@ -38,6 +41,7 @@ impl AppTheme {
     }
 }
 
+/// List of all available themes and their display names, used in UI rendering.
 const ALL_THEMES: [(&str, AppTheme); 10] = [
     ("Catppuccin Frappe", AppTheme::CatppuccinFrappe),
     ("Catppuccin Latte", AppTheme::CatppuccinLatte),
@@ -51,12 +55,14 @@ const ALL_THEMES: [(&str, AppTheme); 10] = [
     ("TokyoNight Light", AppTheme::TokyoNightLight),
 ];
 
+/// Indicates which session type a setting applies to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SessionType {
     Pomodoro,
     Break,
 }
 
+/// Stores user-configurable settings for session durations and themes.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 pub struct Settings {
     pub work_min: u8,
@@ -76,6 +82,7 @@ impl Default for Settings {
     }
 }
 
+/// Messages used for updating the settings tab.
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     PomodoroChanged(u8),
@@ -85,10 +92,12 @@ pub enum Message {
 }
 
 impl Settings {
+    /// Loads saved settings from persistent storage or returns default.
     pub fn new() -> Self {
         persistence::load("settings.json").unwrap_or_default()
     }
 
+    /// Processes messages and updates the component's state.
     pub fn update(&mut self, message: Message) {
         match message {
             Message::PomodoroChanged(value) => self.work_min = value,
@@ -103,6 +112,7 @@ impl Settings {
         }
     }
 
+    /// Builds the main view for the Settings tab.
     pub fn view(&self) -> Element<'_, Message> {
         scrollable(
             column![
@@ -117,6 +127,7 @@ impl Settings {
         .into()
     }
 
+    /// View section for configuring session timer durations.
     fn view_timer_settings(&self) -> Element<'_, Message> {
         column![
             text("Time (minutes)").size(20),
@@ -137,12 +148,15 @@ impl Settings {
         .into()
     }
 
+    /// View section for configuring color themes for both sessions.
     fn view_theme_settings(&self) -> Element<'_, Message> {
+        // Helper function to generate a column of theme radio buttons.
         let theme_radios = |session, active_theme| {
             column(
                 ALL_THEMES
                     .iter()
                     .map(|(name, theme)| {
+                        // Create a small colored swatch showing theme's background color
                         let color_swatch_style = |_: &Theme| -> container::Style {
                             let palette = theme.to_iced_theme().extended_palette().clone();
                             container::Style {
@@ -190,10 +204,7 @@ impl Settings {
         .into()
     }
 
-    fn shortcut_row<'a>(&self, key: &'a str, desc: &'a str) -> iced::widget::Row<'a, Message> {
-        row![text(key).font(iced::Font::MONOSPACE).width(150), text(desc)].spacing(10)
-    }
-
+    /// View section listing all keyboard shortcuts available in the app.
     fn view_shortcuts<'a>(&self) -> Element<'a, Message> {
         let content = column![
             text("Shortcuts"),
@@ -214,5 +225,10 @@ impl Settings {
         .spacing(10);
 
         container(content).center_x(Length::Fill).into()
+    }
+
+    /// Helper function to build a single shortcut row.
+    fn shortcut_row<'a>(&self, key: &'a str, desc: &'a str) -> iced::widget::Row<'a, Message> {
+        row![text(key).font(iced::Font::MONOSPACE).width(150), text(desc)].spacing(10)
     }
 }

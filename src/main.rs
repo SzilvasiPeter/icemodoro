@@ -1,3 +1,9 @@
+//! # Icemodoro
+//!
+//! A simple Pomodoro and ToDo application built with the Iced GUI library.
+//! The application follows the Elm architecture, where the state is updated via messages,
+//! and the view displays the UI interface from the current state.
+
 mod persistence;
 mod pomodoro;
 mod report;
@@ -20,7 +26,7 @@ fn main() -> iced::Result {
         .run()
 }
 
-// TODO: Add documentation
+/// Holds the entire state of the application, including the state for each tab.
 struct App {
     active_tab: TabId,
     pomodoro: Pomodoro,
@@ -28,16 +34,21 @@ struct App {
     report: Report,
 }
 
+/// Defines all messages that can update the application's state.
+///
+/// It wraps messages from child components (e.g. `pomodoro`, `settings`) to enable
+/// central processing in `App::update`.
 #[derive(Debug, Clone)]
 enum Message {
     TabSelected(TabId),
+    NavigateTabForward,
+    NavigateTabBackward,
     Pomodoro(pomodoro::Message),
     Settings(setting::Message),
     Report(report::Message),
-    NavigateTabForward,
-    NavigateTabBackward,
 }
 
+/// Identifier for each application tab.
 #[derive(Eq, PartialEq, Debug, Clone, Copy)]
 enum TabId {
     Pomodoro,
@@ -65,6 +76,10 @@ impl Default for App {
 }
 
 impl App {
+    /// Processes messages to update the application state.
+    ///
+    /// This function acts as a central dispatcher, handling top-level messages and
+    /// delegating component-specific messages to their respective update functions.
     fn update(&mut self, msg: Message) -> iced::Task<Message> {
         match msg {
             Message::TabSelected(id) => self.active_tab = id,
@@ -83,11 +98,12 @@ impl App {
                 };
             }
             Message::Pomodoro(p_msg) => {
+                // When a pomodoro day ends, generate a report and switch to the report tab.
                 if matches!(p_msg, pomodoro::Message::EndDay) {
-                    let (completed, focused) = self.pomodoro.get_completed_stats();
+                    let (focused, completed) = self.pomodoro.get_completed_stats();
                     if completed > 0 {
                         self.report
-                            .update(report::Message::Generate { completed, focused });
+                            .update(report::Message::Generate { focused, completed });
                         self.active_tab = TabId::Report;
                     }
                 }
@@ -95,6 +111,7 @@ impl App {
                 return self.pomodoro.update(p_msg).map(Message::Pomodoro);
             }
             Message::Settings(s_msg) => {
+                // When settings are submitted, apply them to the pomodoro timer and switch back.
                 if matches!(s_msg, setting::Message::Submit) {
                     self.pomodoro.apply_settings(
                         self.settings.work_min,
@@ -112,6 +129,7 @@ impl App {
         iced::Task::none()
     }
 
+    /// Defines application-wide subscriptions for timers and keyboard events.
     fn subscription(&self) -> Subscription<Message> {
         let pomodoro_sub = self.pomodoro.subscription().map(Message::Pomodoro);
 
@@ -129,6 +147,7 @@ impl App {
         Subscription::batch(vec![pomodoro_sub, tab_sub])
     }
 
+    /// Constructs the user interface from the current application state.
     fn view(&self) -> Element<'_, Message> {
         let title = text("Icemodoro").size(30);
         let handler = image::Handle::from_bytes(include_bytes!("../logo.png").as_slice());
@@ -160,6 +179,7 @@ impl App {
             .into()
     }
 
+    /// Provides the current theme, which changes dynamically based on the pomodoro session.
     fn theme(&self) -> Theme {
         self.pomodoro.theme()
     }
