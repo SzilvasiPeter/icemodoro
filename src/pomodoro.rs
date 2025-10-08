@@ -496,7 +496,11 @@ impl Pomodoro {
                 .into(),
                 // Render the normal view for all other tasks.
                 _ => {
-                    let done_icon = if task.done { "⊗" } else { "⊙" };
+                    let done_icon = if task.done {
+                        text("⊗").shaping(text::Shaping::Advanced)
+                    } else {
+                        text("⊙").shaping(text::Shaping::Advanced)
+                    };
                     let task_style = match (self.active == Some(task.id), task.done) {
                         (true, _) => button::primary,
                         (false, true) => button::success,
@@ -512,8 +516,9 @@ impl Pomodoro {
                             .width(Length::Fill)
                             .on_press(Message::Select(task.id)),
                         text(format_duration(task.spent)),
-                        button("⋯").on_press(Message::Edit(task.id)),
-                        button("×")
+                        button(text("⋯").shaping(text::Shaping::Advanced))
+                            .on_press(Message::Edit(task.id)),
+                        button(text("×").shaping(text::Shaping::Advanced))
                             .style(button::danger)
                             .on_press(Message::Delete(task.id)),
                     ]
