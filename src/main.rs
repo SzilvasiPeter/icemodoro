@@ -111,7 +111,7 @@ impl App {
                 return self.pomodoro.update(p_msg).map(Message::Pomodoro);
             }
             Message::Settings(s_msg) => {
-                // When settings are submitted, apply them to the pomodoro timer and switch back.
+                // When settings are submitted, apply them and switch to pomodoro tab.
                 if matches!(s_msg, setting::Message::Submit) {
                     self.pomodoro.apply_settings(
                         self.settings.work_min,
