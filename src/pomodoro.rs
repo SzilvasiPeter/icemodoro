@@ -512,7 +512,7 @@ impl Pomodoro {
                             .width(Length::Fill)
                             .on_press(Message::Select(task.id)),
                         text(format_duration(task.spent)),
-                        button("⁝").on_press(Message::Edit(task.id)),
+                        button("⋯").on_press(Message::Edit(task.id)),
                         button("×")
                             .style(button::danger)
                             .on_press(Message::Delete(task.id)),
