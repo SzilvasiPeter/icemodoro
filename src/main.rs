@@ -135,7 +135,7 @@ impl App {
 
         let tab_sub = iced::keyboard::on_key_press(|key, modifiers| match key.as_ref() {
             Key::Named(Named::Tab) if modifiers.shift() => Some(Message::NavigateTabBackward),
-            // It always returns `false` if it pressed with the `TAB` key. See the https://github.com/iced-rs/iced/issues/3073 issue
+            // BUG: It always returns `false` if it pressed with the `TAB` key. See the https://github.com/iced-rs/iced/issues/3073 issue
             Key::Named(Named::Tab) if !modifiers.alt() => Some(Message::NavigateTabForward),
             _ => None,
         });
