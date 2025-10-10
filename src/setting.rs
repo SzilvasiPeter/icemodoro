@@ -158,7 +158,7 @@ impl Settings {
                     .map(|(name, theme)| {
                         // Create a small colored swatch showing theme's background color
                         let color_swatch_style = |_: &Theme| -> container::Style {
-                            let palette = theme.to_iced_theme().extended_palette().clone();
+                            let palette = *theme.to_iced_theme().extended_palette();
                             container::Style {
                                 background: Some(palette.background.strong.color.into()),
                                 ..Default::default()

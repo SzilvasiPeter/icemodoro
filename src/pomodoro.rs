@@ -281,12 +281,11 @@ impl Pomodoro {
                 }
             }
             Message::SaveEdit => {
-                if let Some((id, new_text)) = self.editing.take() {
-                    if !new_text.trim().is_empty() {
-                        if let Some(task) = self.tasks.iter_mut().find(|t| t.id == id) {
-                            task.desc = new_text;
-                        }
-                    }
+                if let Some((id, new_text)) = self.editing.take()
+                    && !new_text.trim().is_empty()
+                    && let Some(task) = self.tasks.iter_mut().find(|t| t.id == id)
+                {
+                    task.desc = new_text;
                 }
             }
             Message::CancelEdit => self.editing = None,
