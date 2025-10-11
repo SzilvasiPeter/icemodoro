@@ -27,16 +27,16 @@ impl AppTheme {
     /// Converts the custom `AppTheme` into the corresponding `iced::Theme`.
     pub fn to_iced_theme(self) -> Theme {
         match self {
-            AppTheme::CatppuccinFrappe => Theme::CatppuccinFrappe,
-            AppTheme::CatppuccinLatte => Theme::CatppuccinLatte,
-            AppTheme::Dark => Theme::Dark,
-            AppTheme::Light => Theme::Light,
-            AppTheme::GruvboxDark => Theme::GruvboxDark,
-            AppTheme::GruvboxLight => Theme::GruvboxLight,
-            AppTheme::SolarizedDark => Theme::SolarizedDark,
-            AppTheme::SolarizedLight => Theme::SolarizedLight,
-            AppTheme::TokyoNightStorm => Theme::TokyoNightStorm,
-            AppTheme::TokyoNightLight => Theme::TokyoNightLight,
+            Self::CatppuccinFrappe => Theme::CatppuccinFrappe,
+            Self::CatppuccinLatte => Theme::CatppuccinLatte,
+            Self::Dark => Theme::Dark,
+            Self::Light => Theme::Light,
+            Self::GruvboxDark => Theme::GruvboxDark,
+            Self::GruvboxLight => Theme::GruvboxLight,
+            Self::SolarizedDark => Theme::SolarizedDark,
+            Self::SolarizedLight => Theme::SolarizedLight,
+            Self::TokyoNightStorm => Theme::TokyoNightStorm,
+            Self::TokyoNightLight => Theme::TokyoNightLight,
         }
     }
 }
@@ -107,7 +107,7 @@ impl Settings {
                 SessionType::Break => self.break_theme = theme,
             },
             Message::Submit => {
-                persistence::save("settings.json", &self).ok();
+                let _ = persistence::save("settings.json", &self);
             }
         }
     }
@@ -118,7 +118,7 @@ impl Settings {
             column![
                 self.view_timer_settings(),
                 self.view_theme_settings(),
-                self.view_shortcuts(),
+                Self::view_shortcuts(),
                 button("Apply Settings").on_press(Message::Submit),
             ]
             .spacing(20)
@@ -152,34 +152,29 @@ impl Settings {
     fn view_theme_settings(&self) -> Element<'_, Message> {
         // Helper function to generate a column of theme radio buttons.
         let theme_radios = |session, active_theme| {
-            column(
-                ALL_THEMES
-                    .iter()
-                    .map(|(name, theme)| {
-                        // Create a small colored swatch showing theme's background color
-                        let color_swatch_style = |_: &Theme| -> container::Style {
-                            let palette = *theme.to_iced_theme().extended_palette();
-                            container::Style {
-                                background: Some(palette.background.strong.color.into()),
-                                ..Default::default()
-                            }
-                        };
-                        let color_swatch = container(text(""))
-                            .width(Length::Fixed(10.0))
-                            .height(Length::Fixed(10.0))
-                            .style(color_swatch_style);
+            column(ALL_THEMES.iter().map(|(name, app_theme)| {
+                // Create a small colored swatch showing theme's background color
+                let color_swatch_style = |_: &Theme| -> container::Style {
+                    let palette = *app_theme.to_iced_theme().extended_palette();
+                    container::Style {
+                        background: Some(palette.background.strong.color.into()),
+                        ..Default::default()
+                    }
+                };
+                let color_swatch = container(text(""))
+                    .width(Length::Fixed(10.0))
+                    .height(Length::Fixed(10.0))
+                    .style(color_swatch_style);
 
-                        let radio = radio(*name, *theme, Some(active_theme), move |theme| {
-                            Message::ThemeChanged(session, theme)
-                        });
+                let radio = radio(*name, *app_theme, Some(active_theme), move |theme| {
+                    Message::ThemeChanged(session, theme)
+                });
 
-                        row![color_swatch, radio]
-                            .spacing(10)
-                            .align_y(iced::Alignment::Center)
-                            .into()
-                    })
-                    .collect::<Vec<Element<_>>>(),
-            )
+                row![color_swatch, radio]
+                    .spacing(10)
+                    .align_y(iced::Alignment::Center)
+                    .into()
+            }))
             .spacing(5)
         };
 
@@ -205,30 +200,29 @@ impl Settings {
     }
 
     /// View section listing all keyboard shortcuts available in the app.
-    fn view_shortcuts<'a>(&self) -> Element<'a, Message> {
+    fn view_shortcuts<'a>() -> Element<'a, Message> {
+        let shortcut_row = |key, desc| -> iced::widget::Row<'a, Message> {
+            row![text(key).font(iced::Font::MONOSPACE).width(150), text(desc)].spacing(10)
+        };
+
         let content = column![
             text("Shortcuts"),
             horizontal_rule(1),
-            self.shortcut_row("Space", "Start/Stop timer"),
-            self.shortcut_row("r", "Reset timer"),
-            self.shortcut_row("f", "Finish session"),
-            self.shortcut_row("n", "Focus new task input"),
-            self.shortcut_row("a", "Activate/Deactivate first task"),
-            self.shortcut_row("↑ / ↓", "Navigate active task"),
-            self.shortcut_row("s", "Complete active task"),
-            self.shortcut_row("e", "Edit active task"),
-            self.shortcut_row("d", "Delete active task"),
-            self.shortcut_row("x", "End day"),
-            self.shortcut_row("Tab", "Next tab"),
-            self.shortcut_row("Shift + Tab", "Previous tab"),
+            shortcut_row("Space", "Start/Stop timer"),
+            shortcut_row("r", "Reset timer"),
+            shortcut_row("f", "Finish session"),
+            shortcut_row("n", "Focus new task input"),
+            shortcut_row("a", "Activate/Deactivate first task"),
+            shortcut_row("↑ / ↓", "Navigate active task"),
+            shortcut_row("e", "Edit active task"),
+            shortcut_row("s", "Complete active task"),
+            shortcut_row("d", "Delete active task"),
+            shortcut_row("x", "End day"),
+            shortcut_row("Tab", "Next tab"),
+            shortcut_row("Shift + Tab", "Previous tab"),
         ]
         .spacing(10);
 
         container(content).center_x(Length::Fill).into()
-    }
-
-    /// Helper function to build a single shortcut row.
-    fn shortcut_row<'a>(&self, key: &'a str, desc: &'a str) -> iced::widget::Row<'a, Message> {
-        row![text(key).font(iced::Font::MONOSPACE).width(150), text(desc)].spacing(10)
     }
 }

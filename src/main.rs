@@ -1,6 +1,7 @@
+#![forbid(unsafe_code)]
 //! # Icemodoro
 //!
-//! A simple Pomodoro and ToDo application built with the Iced GUI library.
+//! A simple Pomodoro and To-Do list application built with the Iced GUI library.
 //! The application follows the Elm architecture, where the state is updated via messages,
 //! and the view displays the UI interface from the current state.
 
@@ -157,12 +158,12 @@ impl App {
             )
             .push(
                 TabId::Setting,
-                TabLabel::Text("Setting".to_string()),
+                TabLabel::Text("Setting".to_owned()),
                 self.settings.view().map(Message::Settings),
             )
             .push(
                 TabId::Report,
-                TabLabel::Text("Report".to_string()),
+                TabLabel::Text("Report".to_owned()),
                 self.report.view().map(Message::Report),
             )
             .set_active_tab(&self.active_tab)

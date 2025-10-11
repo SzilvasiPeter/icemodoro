@@ -2,12 +2,13 @@
 
 use super::persistence;
 
-use iced::time::Duration;
 use iced::widget::{button, column, container, horizontal_rule, row, scrollable, text};
 use iced::{Center, Element, Length};
 
 use chrono::{Days, NaiveDate};
 use serde::{Deserialize, Serialize};
+
+use std::time::Duration;
 
 /// Represents the productivity data collected for a single day.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,43 +57,42 @@ impl Report {
             Message::Generate { completed, focused } => {
                 let today = chrono::Local::now().date_naive();
 
-                let current_focused = match self.history.iter_mut().find(|r| r.date == today) {
+                let current_focused = if let Some(report) =
+                    self.history.iter_mut().find(|report| report.date == today)
+                {
                     // Found today's report, update focused/completed values.
-                    Some(report) => {
-                        report.focused += focused;
-                        report.completed += completed;
-                        report.focused
-                    }
+                    report.focused += focused;
+                    report.completed += completed;
+                    report.focused
+                } else {
                     // New day, add new report.
-                    None => {
-                        self.history.push(DayReport {
-                            date: today,
-                            focused,
-                            completed,
-                        });
-                        self.history.sort_by_key(|r| r.date);
+                    self.history.push(DayReport {
+                        date: today,
+                        focused,
+                        completed,
+                    });
+                    self.history.sort_by_key(|report| report.date);
 
-                        // Update longest streak if current streak is longer
-                        let streak = self.calculate_current_streak(today);
-                        if streak > self.longest_streak {
-                            self.longest_streak = streak;
-                        }
-
-                        focused
+                    // Update longest streak if current streak is longer
+                    let streak = self.calculate_current_streak(today);
+                    if streak > self.longest_streak {
+                        self.longest_streak = streak;
                     }
+
+                    focused
                 };
 
                 if current_focused > self.longest_focused {
                     self.longest_focused = current_focused;
                 }
 
-                persistence::save("reports.json", &self).ok();
+                let _ = persistence::save("reports.json", &self);
             }
             Message::Clear => {
                 self.history.clear();
                 self.longest_streak = 0;
                 self.longest_focused = Duration::from_secs(0);
-                persistence::save("reports.json", &self).ok();
+                let _ = persistence::save("reports.json", &self);
             }
             Message::Import => {
                 // TODO: Show error message on the view
@@ -102,19 +102,31 @@ impl Report {
             }
             Message::Export => {
                 // TODO: Show error message on the view
-                persistence::export(&self).ok();
+                let _ = persistence::export(&self);
             }
         }
     }
 
     /// Calculates the current number of consecutive days with a report, ending with `today`.
     fn calculate_current_streak(&self, today: NaiveDate) -> usize {
-        let history = &self.history;
-        let mut day_streak = 0;
-        let mut expected_date = Some(today);
+        // let history = &self.history;
+        // let mut day_streak = 0;
+        // let mut expected_date = Some(today);
 
         // Iterate backward through the history to check for continuity.
-        for report in history.iter().rev() {
+        self.history
+            .iter()
+            .rev()
+            .scan(Some(today), |expected, report| match *expected {
+                Some(date) if report.date == date => {
+                    *expected = date.checked_sub_days(Days::new(1));
+                    Some(1)
+                }
+                _ => None,
+            })
+            .count()
+
+        /* for report in history.iter().rev() {
             match expected_date {
                 Some(date) if report.date == date => {
                     day_streak += 1;
@@ -122,9 +134,9 @@ impl Report {
                 }
                 _ => break,
             }
-        }
+        }*/
 
-        day_streak
+        // day_streak
     }
 
     /// Builds the report summary, history table, and control buttons.
@@ -139,8 +151,8 @@ impl Report {
         } else {
             let today = chrono::Local::now().date_naive();
             let day_streak = self.calculate_current_streak(today);
-            let focused_today = match self.history.iter().find(|r| r.date == today) {
-                Some(r) => r.focused,
+            let focused_today = match self.history.iter().find(|report| report.date == today) {
+                Some(report) => report.focused,
                 None => Duration::from_secs(0),
             };
 
@@ -152,8 +164,8 @@ impl Report {
                     ]
                     .width(Length::Fill),
                     column![
-                        text(format!("{} days", day_streak)).size(18),
-                        text(format!("{} days", self.longest_streak)).size(18),
+                        text!("{} days", day_streak).size(18),
+                        text!("{} days", self.longest_streak).size(18),
                     ]
                     .width(Length::Fill),
                 ]

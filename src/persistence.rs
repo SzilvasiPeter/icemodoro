@@ -13,7 +13,7 @@ use std::path::PathBuf;
 /// Convenience alias for persistence-related results.
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
-/// Gets the application's data directory using ProjectDirs.
+/// Gets the application's data directory using `ProjectDirs`.
 ///
 /// This function ensures the directory exists and adheres to OS conventions
 /// (e.g., `~/.local/share/icemodoro` on Linux, `%APPDATA%/icemodoro` on Windows).

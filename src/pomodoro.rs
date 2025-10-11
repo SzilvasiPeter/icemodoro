@@ -3,7 +3,6 @@
 use super::persistence;
 
 use iced::keyboard::key::{Key, Named};
-use iced::time::{Duration, Instant, every};
 use iced::widget::text_input::Id;
 use iced::widget::{
     button, column, container, horizontal_rule, keyed_column, progress_bar, row, text, text_input,
@@ -12,6 +11,8 @@ use iced::{Center, Element, Length, Subscription, Theme};
 
 use notify_rust::Notification;
 use serde::{Deserialize, Serialize};
+
+use std::time::{Duration, Instant};
 
 /// Represents a single task in the to-do list.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -135,8 +136,8 @@ impl Pomodoro {
     ///
     /// It also loads any existing tasks from persistent storage.
     pub fn new(work_min: u8, break_min: u8, work_theme: Theme, break_theme: Theme) -> Self {
-        let work_duration = Duration::from_secs(work_min as u64 * 60);
-        let break_duration = Duration::from_secs(break_min as u64 * 60);
+        let work_duration = Duration::from_secs(u64::from(work_min) * 60);
+        let break_duration = Duration::from_secs(u64::from(break_min) * 60);
         let tasks: Vec<Task> = persistence::load("tasks.json").unwrap_or_default();
         let active = tasks.iter().find(|t| !t.done).map(|t| t.id);
 
@@ -166,12 +167,12 @@ impl Pomodoro {
 
     /// Updates the component's configuration from the settings.
     pub fn apply_settings(&mut self, w_min: u8, b_min: u8, w_theme: Theme, b_theme: Theme) {
-        self.work_dur = Duration::from_secs(w_min as u64 * 60);
-        self.break_dur = Duration::from_secs(b_min as u64 * 60);
+        self.work_dur = Duration::from_secs(u64::from(w_min) * 60);
+        self.break_dur = Duration::from_secs(u64::from(b_min) * 60);
         (self.work_theme, self.break_theme) = (w_theme, b_theme);
 
         // Only reset the timer if it's not currently running.
-        if let State::Idle = self.state {
+        if matches!(self.state, State::Idle) {
             self.reset_duration();
             self.theme = match self.session {
                 Session::Pomodoro => self.work_theme.clone(),
@@ -205,57 +206,10 @@ impl Pomodoro {
 
         match message {
             // Timer messages
-            Message::Tick(now) => match &mut self.state {
-                State::Ticking { expires } => {
-                    if let Some(duration) = expires.checked_duration_since(now) {
-                        self.remaining = duration;
-                    } else {
-                        // Timer finished, transition to Overtime.
-                        self.remaining = Duration::ZERO;
-                        Notification::new()
-                            .sound_name("alarm-clock-elapsed")
-                            .summary("Overtime!")
-                            .show()
-                            .ok();
-                        self.state = State::Overtime { last_tick: now };
-                    }
-                }
-                State::Overtime { last_tick } => {
-                    self.overtime += now - *last_tick;
-                    *last_tick = now;
-                }
-                State::Idle => {}
-            },
-            Message::Toggle => {
-                let expires = Instant::now() + self.remaining;
-                self.state = match self.state {
-                    State::Idle => State::Ticking { expires },
-                    _ => State::Idle,
-                }
-            }
+            Message::Tick(now) => self.handle_tick(now),
+            Message::Toggle => self.toogle_timer(),
             Message::Reset => self.reset_duration(),
-            Message::Finish => {
-                // If finishing a work session, log the time spent on the active task.
-                if let (Session::Pomodoro, Some(id)) = (&self.session, self.active) {
-                    let time_spent = self.get_time_spent();
-                    if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
-                        task.spent += time_spent;
-                    }
-                }
-
-                // Switch to the next session type.
-                self.session = match self.session {
-                    Session::Pomodoro => {
-                        self.theme = self.break_theme.clone();
-                        Session::Break
-                    }
-                    Session::Break => {
-                        self.theme = self.work_theme.clone();
-                        Session::Pomodoro
-                    }
-                };
-                self.reset_duration();
-            }
+            Message::Finish => self.finish_timer(),
 
             // Task list messages
             Message::Input(value) => self.input = value,
@@ -292,19 +246,29 @@ impl Pomodoro {
 
             // Keyboard shortcut messages
             Message::FocusInput => return text_input::focus(self.input_id.clone()),
-            Message::CompleteActive => self.complete_task(self.active.unwrap_or(0)),
+            Message::CompleteActive => {
+                if let Some(active_id) = self.active {
+                    self.complete_task(active_id);
+                }
+            }
             Message::Activate => {
                 if let Some(task) = self.tasks.iter().find(|task| !task.done) {
                     self.select_task(task.id);
                 }
             }
-            Message::ActiveUp => self.move_active(Direction::Up),
-            Message::ActiveDown => self.move_active(Direction::Down),
+            Message::ActiveUp => self.move_active(&Direction::Up),
+            Message::ActiveDown => self.move_active(&Direction::Down),
             Message::EditActive => {
-                self.edit_task(self.active.unwrap_or(0));
+                if let Some(active_id) = self.active {
+                    self.edit_task(active_id);
+                }
                 return text_input::focus(self.edit_id.clone());
             }
-            Message::DeleteActive => self.delete_task(self.active.unwrap_or(0)),
+            Message::DeleteActive => {
+                if let Some(active_id) = self.active {
+                    self.delete_task(active_id);
+                }
+            }
         }
 
         if task_updated {
@@ -318,7 +282,7 @@ impl Pomodoro {
     pub fn subscription(&self) -> Subscription<Message> {
         let timer_sub = match self.state {
             State::Idle => Subscription::none(),
-            _ => every(Duration::from_millis(500)).map(Message::Tick),
+            _ => iced::time::every(Duration::from_millis(500)).map(Message::Tick),
         };
 
         let key_sub = iced::keyboard::on_key_press(|key, _modifiers| match key.as_ref() {
@@ -362,6 +326,60 @@ impl Pomodoro {
         self.theme.clone()
     }
 
+    /// Counts down the timer. If timer is zero, then notifies and counts up the overtime.
+    fn handle_tick(&mut self, now: Instant) {
+        match &mut self.state {
+            State::Ticking { expires } => {
+                if let Some(duration) = expires.checked_duration_since(now) {
+                    self.remaining = duration;
+                } else {
+                    self.remaining = Duration::ZERO;
+                    let _ = Notification::new()
+                        .sound_name("alarm-clock-elapsed")
+                        .summary("Time is over!")
+                        .show();
+                    self.state = State::Overtime { last_tick: now };
+                }
+            }
+            State::Overtime { last_tick } => {
+                self.overtime += now - *last_tick;
+                *last_tick = now;
+            }
+            State::Idle => {}
+        }
+    }
+
+    /// Starts or stops the timer.
+    fn toogle_timer(&mut self) {
+        let expires = Instant::now() + self.remaining;
+        self.state = match self.state {
+            State::Idle => State::Ticking { expires },
+            _ => State::Idle,
+        }
+    }
+
+    /// Logs the work time spent on the active task, then switches to the next session type.
+    fn finish_timer(&mut self) {
+        if let (Session::Pomodoro, Some(id)) = (&self.session, self.active) {
+            let time_spent = self.get_time_spent();
+            if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
+                task.spent += time_spent;
+            }
+        }
+
+        self.session = match self.session {
+            Session::Pomodoro => {
+                self.theme = self.break_theme.clone();
+                Session::Break
+            }
+            Session::Break => {
+                self.theme = self.work_theme.clone();
+                Session::Pomodoro
+            }
+        };
+        self.reset_duration();
+    }
+
     /// Resets the timer to the current session's full duration.
     fn reset_duration(&mut self) {
         self.remaining = match self.session {
@@ -392,11 +410,10 @@ impl Pomodoro {
     }
 
     /// Moves the active task selection up or down from the list of incomplete tasks.
-    fn move_active(&mut self, direction: Direction) {
+    fn move_active(&mut self, direction: &Direction) {
         let active_tasks: Vec<&Task> = self.tasks.iter().filter(|task| !task.done).collect();
-        let current_active_id = match self.active {
-            Some(id) => id,
-            None => return,
+        let Some(current_active_id) = self.active else {
+            return;
         };
 
         let current_index = active_tasks
@@ -419,7 +436,7 @@ impl Pomodoro {
         let time_spent = self.get_time_spent();
         if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
             task.done = !task.done;
-            task.spent += time_spent;
+            task.spent = task.spent.saturating_add(time_spent);
         }
 
         self.last_done = self.remaining;

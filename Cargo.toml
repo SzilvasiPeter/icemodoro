@@ -2,6 +2,11 @@
 name = "icemodoro"
 version = "0.1.0"
 edition = "2024"
+description = "A simple Pomodoro and To-Do list application built with the Iced GUI library"
+repository = "https://github.com/SzilvasiPeter/icemodoro"
+readme = "README.md"
+license = "MIT"
+keywords = ["iced", "ui", "pomodoro", "todo"]
 
 [dependencies]
 iced = { version = "0.13.1", features = ["smol", "image"] }
