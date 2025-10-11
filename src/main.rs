@@ -37,8 +37,7 @@ struct App {
 
 /// Defines all messages that can update the application's state.
 ///
-/// It wraps messages from child components (e.g. `pomodoro`, `settings`) to enable
-/// central processing in `App::update`.
+/// It wraps messages from child components (e.g. `pomodoro`, `settings`) to enable central processing in `App::update`.
 #[derive(Debug, Clone)]
 enum Message {
     TabSelected(TabId),
@@ -136,7 +135,7 @@ impl App {
 
         let tab_sub = iced::keyboard::on_key_press(|key, modifiers| match key.as_ref() {
             Key::Named(Named::Tab) if modifiers.shift() => Some(Message::NavigateTabBackward),
-            Key::Named(Named::Tab) if !modifiers.alt() => Some(Message::NavigateTabForward),
+            Key::Named(Named::Tab) => Some(Message::NavigateTabForward),
             _ => None,
         });
 
