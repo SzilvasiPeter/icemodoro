@@ -109,14 +109,9 @@ impl Report {
 
     /// Calculates the current number of consecutive days with a report, ending with `today`.
     fn calculate_current_streak(&self, today: NaiveDate) -> usize {
-        // let history = &self.history;
-        // let mut day_streak = 0;
-        // let mut expected_date = Some(today);
-
-        // Iterate backward through the history to check for continuity.
         self.history
             .iter()
-            .rev()
+            .rev() // Iterate backward through the history to check for continuity
             .scan(Some(today), |expected, report| match *expected {
                 Some(date) if report.date == date => {
                     *expected = date.checked_sub_days(Days::new(1));
@@ -125,18 +120,6 @@ impl Report {
                 _ => None,
             })
             .count()
-
-        /* for report in history.iter().rev() {
-            match expected_date {
-                Some(date) if report.date == date => {
-                    day_streak += 1;
-                    expected_date = date.checked_sub_days(Days::new(1));
-                }
-                _ => break,
-            }
-        }*/
-
-        // day_streak
     }
 
     /// Builds the report summary, history table, and control buttons.
