@@ -217,7 +217,7 @@ impl Pomodoro {
                 let desc = self.input.trim().to_string();
                 if !desc.is_empty() {
                     self.tasks.push(Task::new(self.next_id, desc));
-                    self.next_id = self.next_id.saturating_add(1);
+                    self.next_id = self.next_id.wrapping_add(1);
                     self.input.clear();
                 }
             }
@@ -546,15 +546,26 @@ impl Pomodoro {
             (task.id, view)
         });
 
-        column![
-            text("Tasks").size(20),
-            horizontal_rule(1),
+        let add_fields = if self.tasks.len() <= 10 {
             row![
                 text_input("What are you working on?", &self.input)
                     .id(self.input_id.clone())
                     .on_input(Message::Input)
                     .on_submit(Message::Add),
-                button("Add").on_press(Message::Add),
+                button("Add").on_press(Message::Add)
+            ]
+        } else {
+            row![
+                text_input("Let’s finish current tasks first!", &self.input),
+                button("Add")
+            ]
+        };
+
+        column![
+            text("Tasks").size(20),
+            horizontal_rule(1),
+            row![
+                add_fields.spacing(10),
                 button("Delete All")
                     .on_press(Message::Clear)
                     .style(button::danger)
