@@ -61,8 +61,8 @@ impl Report {
                     self.history.iter_mut().find(|report| report.date == today)
                 {
                     // Found today's report, update focused/completed values.
-                    report.focused += focused;
-                    report.completed += completed;
+                    report.focused = report.focused.saturating_add(focused);
+                    report.completed = report.completed.saturating_add(completed);
                     report.focused
                 } else {
                     // New day, add new report.

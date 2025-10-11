@@ -217,7 +217,7 @@ impl Pomodoro {
                 let desc = self.input.trim().to_string();
                 if !desc.is_empty() {
                     self.tasks.push(Task::new(self.next_id, desc));
-                    self.next_id += 1;
+                    self.next_id = self.next_id.saturating_add(1);
                     self.input.clear();
                 }
             }
@@ -342,7 +342,7 @@ impl Pomodoro {
                 }
             }
             State::Overtime { last_tick } => {
-                self.overtime += now - *last_tick;
+                self.overtime = self.overtime.saturating_add(now - *last_tick);
                 *last_tick = now;
             }
             State::Idle => {}
@@ -363,7 +363,7 @@ impl Pomodoro {
         if let (Session::Pomodoro, Some(id)) = (&self.session, self.active) {
             let time_spent = self.get_time_spent();
             if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
-                task.spent += time_spent;
+                task.spent = task.spent.saturating_add(time_spent);
             }
         }
 
