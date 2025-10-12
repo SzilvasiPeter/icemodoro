@@ -23,6 +23,13 @@ jobs:
           key: cargo-registry-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: cargo-registry-${{ runner.os }}-
 
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: cargo-build-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-build-${{ runner.os }}-
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
