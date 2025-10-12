@@ -14,22 +14,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache cargo registry
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-          key: cargo-registry-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-registry-${{ runner.os }}-
-
-      - name: Cache cargo build
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: cargo-build-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: cargo-build-${{ runner.os }}-
-
       - name: Install Rust
         uses: moonrepo/setup-rust@v1
         with:
