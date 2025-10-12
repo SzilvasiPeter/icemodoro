@@ -2,13 +2,12 @@
 
 use super::persistence;
 
+use iced::time::Duration;
 use iced::widget::{button, column, container, horizontal_rule, row, scrollable, text};
 use iced::{Center, Element, Length};
 
 use chrono::{Days, NaiveDate};
 use serde::{Deserialize, Serialize};
-
-use std::time::Duration;
 
 /// Represents the productivity data collected for a single day.
 #[derive(Debug, Clone, Serialize, Deserialize)]

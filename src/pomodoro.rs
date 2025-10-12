@@ -3,6 +3,7 @@
 use super::persistence;
 
 use iced::keyboard::key::{Key, Named};
+use iced::time::{Duration, Instant};
 use iced::widget::text_input::Id;
 use iced::widget::{
     button, column, container, horizontal_rule, keyed_column, progress_bar, row, text, text_input,
@@ -11,8 +12,6 @@ use iced::{Center, Element, Length, Subscription, Theme};
 
 use notify_rust::Notification;
 use serde::{Deserialize, Serialize};
-
-use std::time::{Duration, Instant};
 
 /// Represents a single task in the to-do list.
 #[derive(Debug, Clone, Serialize, Deserialize)]

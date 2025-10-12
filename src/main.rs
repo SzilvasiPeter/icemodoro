@@ -157,12 +157,12 @@ impl App {
             )
             .push(
                 TabId::Setting,
-                TabLabel::Text("Setting".to_owned()),
+                TabLabel::Text("Setting".to_string()),
                 self.settings.view().map(Message::Settings),
             )
             .push(
                 TabId::Report,
-                TabLabel::Text("Report".to_owned()),
+                TabLabel::Text("Report".to_string()),
                 self.report.view().map(Message::Report),
             )
             .set_active_tab(&self.active_tab)
