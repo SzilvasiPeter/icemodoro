@@ -1,0 +1,33 @@
+name: Lint and Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint:
+    name: Rust Linting and Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Check formatting
+        run: cargo fmt -- --check
+
+      - name: Run Clippy with pedantic lints
+        run: cargo clippy -- -W clippy::pedantic
+
+      - name: Run cargo audit
+        run: cargo audit
