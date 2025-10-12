@@ -14,10 +14,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: cargo-registry-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: cargo-registry-${{ runner.os }}-
+
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: clippy
           override: true
 
       - name: Cache cargo bin
