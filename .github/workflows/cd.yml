@@ -24,7 +24,6 @@ jobs:
         uses: moonrepo/setup-rust@v1
         with:
           components: cargo-strip
-          target: ${{ matrix.target }}
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
