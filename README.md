@@ -13,8 +13,15 @@ Pomodoro and ToDo application, inspired by [pomofocus.io](https://pomofocus.io/)
 ## Installation
 
 ```bash
+cargo run --release
+```
+
+For smaller, stripped binary:
+
+```bash
 cargo build --release
-./target/release/icemodoro
+cargo strip
+cargo run --release
 ```
 
 ## Shortcuts

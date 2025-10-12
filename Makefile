@@ -9,8 +9,9 @@ clippy:
 audit:
 	cargo audit
 
-build:
+run:
 	cargo build --release
 	cargo strip
+	cargo run --release
 
 check: fmt clippy audit
