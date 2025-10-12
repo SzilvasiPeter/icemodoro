@@ -23,7 +23,8 @@ jobs:
       - name: Install Rust
         uses: moonrepo/setup-rust@v1
         with:
-          components: cargo-strip
+          bins: cargo-strip
+          components: cargo
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
