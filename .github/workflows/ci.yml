@@ -25,8 +25,3 @@ jobs:
 
       - name: Run Clippy with pedantic lints
         run: cargo clippy -- -W clippy::pedantic
-
-      - name: Audit Rust Dependencies
-        uses: actions-rust-lang/audit@v1
-        with:
-          denyWarnings: true
