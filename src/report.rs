@@ -24,6 +24,9 @@ pub struct Report {
     history: Vec<DayReport>,
     longest_streak: usize,
     longest_focused: Duration,
+
+    #[serde(skip)]
+    error: String,
 }
 
 impl Default for Report {
@@ -32,6 +35,7 @@ impl Default for Report {
             history: Vec::new(),
             longest_streak: 0,
             longest_focused: Duration::from_secs(0),
+            error: String::new(),
         }
     }
 }
@@ -87,23 +91,28 @@ impl Report {
                 }
 
                 let _ = persistence::save("reports.json", &self);
+                self.error.clear();
             }
             Message::Clear => {
                 self.history.clear();
                 self.longest_streak = 0;
                 self.longest_focused = Duration::from_secs(0);
+                self.error.clear();
                 let _ = persistence::save("reports.json", &self);
             }
-            Message::Import => {
-                // TODO: Show error message on the view
-                if let Ok(imported_data) = persistence::import::<Self>("reports.json") {
+            Message::Import => match persistence::import::<Self>("reports.json") {
+                Ok(imported_data) => {
                     *self = imported_data;
+                    self.error.clear();
                 }
-            }
-            Message::Export => {
-                // TODO: Show error message on the view
-                let _ = persistence::export(&self);
-            }
+                Err(_) => {
+                    self.error = "Import failed! Please ensure the file is valid.".to_string();
+                }
+            },
+            Message::Export => match persistence::export(&self) {
+                Ok(()) => self.error.clear(),
+                Err(_) => self.error = "Export is failed! Please, try again.".to_string(),
+            },
         }
     }
 
@@ -124,7 +133,7 @@ impl Report {
 
     /// Builds the report summary, history table, and control buttons.
     pub fn view(&self) -> Element<'_, Message> {
-        let content = if self.history.is_empty() {
+        let mut content = if self.history.is_empty() {
             column![
                 text("No reports generated yet.").size(20),
                 text("Press 'End Day' in the Pomodoro tab to save a report.").size(16),
@@ -221,6 +230,10 @@ impl Report {
             ]
             .spacing(10)
         };
+
+        if !self.error.is_empty() {
+            content = content.push(text(&self.error).style(text::danger));
+        }
 
         container(content)
             .width(Length::Fill)
