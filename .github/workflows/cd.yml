@@ -18,18 +18,13 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
 
-      - name: Set up Rust toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Install Rust
+        uses: moonrepo/setup-rust@v1
         with:
-          profile: minimal
-          toolchain: stable
+          components: cargo-strip
           target: ${{ matrix.target }}
-          override: true
-
-      - name: Install cargo-strip
-        run: cargo install cargo-strip
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
@@ -38,7 +33,7 @@ jobs:
         run: cargo strip --target ${{ matrix.target }}
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: icemodoro-${{ matrix.target }}
           path: |
