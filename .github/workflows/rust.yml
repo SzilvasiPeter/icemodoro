@@ -35,15 +35,16 @@ jobs:
           bins: cargo-strip
           targets: ${{ matrix.target }}
 
-      # Install the linker needed for cross-compiling to Windows from Linux
-      # - name: Install Windows (MinGW) linker
-      #   if: matrix.target == 'x86_64-pc-windows-gnu'
-      #   run: sudo apt-get update -y && sudo apt-get install -y mingw-w64
+      #Install the linker needed for cross-compiling to Windows from Linux
+      - name: Install Windows (MinGW) linker
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        run: sudo apt-get update -y && sudo apt-get install -y mingw-w64
+
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
-        # env:
-        #   # Set the linker for the Windows target
-        #   CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+        env:
+          # Set the linker for the Windows target
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
 
       - name: Strip binary
         run: cargo strip --release --target ${{ matrix.target }}
