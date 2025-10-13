@@ -43,15 +43,15 @@ jobs:
         run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
 
       - name: Build release binary
-        run: cargo build --release --target ${{ matrix.target }}
+        run: |
+          cargo build --release --target ${{ matrix.target }}
+          mv target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }} ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
         env:
           # Set the linker for the Windows target, references:
           # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
           # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
           # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
-          # Append the target to the binary name, ref: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
-          CARGO_BIN_NAME: ${{ env.PROJECT_NAME }}-${{ matrix.target }}
 
       - name: Strip binary
         run: cargo strip --target ${{ matrix.target }}
@@ -60,7 +60,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
-          path: target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+          path: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
 
   release:
     name: Create GitHub Release
