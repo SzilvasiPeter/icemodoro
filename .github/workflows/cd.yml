@@ -34,10 +34,10 @@ jobs:
         with:
           bins: cargo-strip
           targets: ${{ matrix.target }}
-        # env:
-        #   # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
-        #   # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
+          # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
         if: matrix.target == 'x86_64-pc-windows-gnu'
