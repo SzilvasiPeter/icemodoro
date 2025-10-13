@@ -18,11 +18,9 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             suffix: ""
-          # FIXME: The gh-release is unable to upload the MacOS build
-          # Error: Not Found - https://docs.github.com/rest/releases/assets#update-a-release-asset
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
-          #   suffix: ""
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            suffix: ""
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
             suffix: ".exe"
@@ -61,7 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
-          path: target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
+          path: target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
 
   release:
     name: Create GitHub Release
