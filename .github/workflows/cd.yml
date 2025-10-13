@@ -35,8 +35,7 @@ jobs:
           bins: cargo-strip
           targets: ${{ matrix.target }}
         env:
-          # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
-          # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+          # It allegedly fixes `402 Payment Required` error on macos build: https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
@@ -51,6 +50,8 @@ jobs:
           # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
           # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+          # Append the target to the binary name, ref: https://doc.rust-lang.org/cargo/reference/environment-variables.html#environment-variables-cargo-sets-for-crates
+          CARGO_BIN_NAME: ${{ env.PROJECT_NAME }}-${{ matrix.target }}
 
       - name: Strip binary
         run: cargo strip --target ${{ matrix.target }}
@@ -78,3 +79,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*
+
+      # TODO: Publish to cargo registry using `release-plz`
