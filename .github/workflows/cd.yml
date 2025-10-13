@@ -18,6 +18,8 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             suffix: ""
+          # FIXME: The gh-release is unable to upload the MacOS build
+          # Error: Not Found - https://docs.github.com/rest/releases/assets#update-a-release-asset
           # - target: x86_64-apple-darwin
           #   os: macos-latest
           #   suffix: ""
@@ -78,5 +80,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*
-          # Need to select the Settings > Actions > General > Workflow permissions: "Read and write permissions"
-          token: ${{ secrets.GITHUB_TOKEN }}
