@@ -17,11 +17,14 @@ jobs:
       - name: Setup Rust
         uses: moonrepo/setup-rust@v1
         with:
+          bins: cargo-audit
           components: clippy
-          override: true
 
       - name: Check formatting
         run: cargo fmt -- --check
 
       - name: Run Clippy with pedantic lints
         run: cargo clippy -- -W clippy::pedantic
+
+      - name: Run cargo audit
+        run: cargo audit
