@@ -18,9 +18,9 @@ jobs:
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             suffix: ""
-          # - target: x86_64-apple-darwin
-          #   os: macos-latest
-          #   suffix: ""
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            suffix: ""
           - target: x86_64-pc-windows-gnu
             os: ubuntu-latest
             suffix: ".exe"
@@ -34,14 +34,14 @@ jobs:
         with:
           bins: cargo-strip
           targets: ${{ matrix.target }}
-        # env:
-        # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
-        # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
-        # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
+          # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
         if: matrix.target == 'x86_64-pc-windows-gnu'
-        run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-ucrt64
+        run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
@@ -50,7 +50,7 @@ jobs:
           # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
           # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
           # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
-          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32ucrt-gcc
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
 
       - name: Strip binary
         run: cargo strip --target ${{ matrix.target }}
