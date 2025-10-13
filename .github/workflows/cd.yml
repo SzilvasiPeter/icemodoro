@@ -43,9 +43,7 @@ jobs:
         run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
 
       - name: Build release binary
-        run: |
-          cargo build --release --target ${{ matrix.target }}
-          mv target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }} ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+        run: cargo build --release --target ${{ matrix.target }}
         env:
           # Set the linker for the Windows target, references:
           # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
@@ -55,6 +53,9 @@ jobs:
 
       - name: Strip binary
         run: cargo strip --target ${{ matrix.target }}
+
+      - name: Rename the binary
+        run: mv target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }} ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
