@@ -34,11 +34,14 @@ jobs:
         with:
           bins: cargo-strip
           targets: ${{ matrix.target }}
+        # env:
+        # Is this fixing the sporadic `402 Payment Required` error when downloading from vercel?
+        # https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+        # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
         if: matrix.target == 'x86_64-pc-windows-gnu'
-        # TODO: Check even smaller mingw alternative
-        run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
+        run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-ucrt64
 
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
@@ -47,10 +50,10 @@ jobs:
           # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
           # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
           # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
-          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32ucrt-gcc
 
-      # - name: Strip binary
-      #   run: cargo strip --target ${{ matrix.target }}
+      - name: Strip binary
+        run: cargo strip --target ${{ matrix.target }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -75,6 +78,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*
+          # Need to select the Settings > Actions > General > Workflow permissions: "Read and write permissions"
           token: ${{ secrets.GITHUB_TOKEN }}
-        # env:
-        #   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
