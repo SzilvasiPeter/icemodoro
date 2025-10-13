@@ -195,6 +195,7 @@ impl Pomodoro {
             message,
             Message::Add
                 | Message::Clear
+                | Message::Finish
                 | Message::Complete(_)
                 | Message::CompleteActive
                 | Message::SaveEdit
