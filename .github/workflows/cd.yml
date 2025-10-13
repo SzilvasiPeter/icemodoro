@@ -32,31 +32,31 @@ jobs:
       - name: Setup Rust toolchain and cargo-strip
         uses: moonrepo/setup-rust@v1
         with:
-          # bins: cargo-strip
+          bins: cargo-strip
           targets: ${{ matrix.target }}
 
-      # - name: Install Windows (MinGW) linker
-      #   if: matrix.target == 'x86_64-pc-windows-gnu'
-      #   # TODO: Check even smaller mingw alternative
-      #   run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
+      - name: Install Windows (MinGW) linker
+        if: matrix.target == 'x86_64-pc-windows-gnu'
+        # TODO: Check even smaller mingw alternative
+        run: sudo apt-get update -y && sudo apt-get install -y gcc-mingw-w64-x86-64
 
-      # - name: Build release binary
-      #   run: cargo build --release --target ${{ matrix.target }}
-      #   env:
-      #     # Set the linker for the Windows target, references:
-      #     # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
-      #     # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
-      #     # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
-      #     CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
+      - name: Build release binary
+        run: cargo build --release --target ${{ matrix.target }}
+        env:
+          # Set the linker for the Windows target, references:
+          # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
+          # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
+          # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
+          CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
 
-      # # - name: Strip binary
-      # #   run: cargo strip --target ${{ matrix.target }}
+      # - name: Strip binary
+      #   run: cargo strip --target ${{ matrix.target }}
 
-      # - name: Upload artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
-      #     path: target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+          path: target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
 
   release:
     name: Create GitHub Release
@@ -65,10 +65,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      # - name: Download all build artifacts
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     path: artifacts
+      - name: Download all build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
       # TODO: zip the artifacts
       - name: Create Release and Upload Binaries
