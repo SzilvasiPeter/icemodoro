@@ -35,7 +35,7 @@ jobs:
           bins: cargo-strip
           targets: ${{ matrix.target }}
         env:
-          # It allegedly fixes `402 Payment Required` error on macos build: https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+          # It fixes `402 Payment Required` error on macos build: https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
@@ -45,10 +45,7 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
         env:
-          # Set the linker for the Windows target, references:
-          # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
-          # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
-          # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
+          # Set the linker for the Windows target: https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
 
       - name: Strip binary
@@ -57,11 +54,20 @@ jobs:
       - name: Rename the binary
         run: mv target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }} ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
 
+      - name: Archive binary
+        run: |
+          mkdir dist
+          if [[ "${{ matrix.suffix }}" == ".exe" ]]; then
+            zip dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.zip ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+          else
+            tar -czf dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.tar.gz ${{ env.PROJECT_NAME }}-${{ matrix.target }}
+          fi
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
-          path: ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+          path: dist/
 
   release:
     name: Create GitHub Release
@@ -75,7 +81,6 @@ jobs:
         with:
           path: artifacts
 
-      # TODO: zip the artifacts
       - name: Create Release and Upload Binaries
         uses: softprops/action-gh-release@v2
         with:
