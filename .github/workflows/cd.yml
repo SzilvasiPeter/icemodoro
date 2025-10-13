@@ -1,9 +1,15 @@
 name: Build and Release
 
+# on:
+#   push:
+#     tags:
+#       - "v*.*.*"
+
 on:
   push:
-    tags:
-      - "v*.*.*"
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 env:
   PROJECT_NAME: icemodoro
