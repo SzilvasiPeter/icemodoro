@@ -15,6 +15,9 @@ jobs:
     strategy:
       matrix:
         include:
+          - target: x86_64-unknown-linux-musl
+            os: ubuntu-latest
+            suffix: ""
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-latest
             suffix: ""
@@ -35,7 +38,7 @@ jobs:
           bins: cargo-strip
           targets: ${{ matrix.target }}
         env:
-          # It fixes `402 Payment Required` error on macos build: https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
+          # It fixes `402 Payment Required` error on MacOS build: https://github.com/cargo-bins/cargo-quickinstall/issues/268#issuecomment-2312861638
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Windows (MinGW) linker
