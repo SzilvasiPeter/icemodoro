@@ -43,7 +43,10 @@ jobs:
       - name: Build release binary
         run: cargo build --release --target ${{ matrix.target }}
         env:
-          # Set the linker for the Windows target
+          # Set the linker for the Windows target, references:
+          # - https://doc.rust-lang.org/cargo/reference/config.html#environment-variables
+          # - https://doc.rust-lang.org/cargo/reference/environment-variables.html#configuration-environment-variables
+          # - https://doc.rust-lang.org/cargo/appendix/glossary.html#target
           CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER: x86_64-w64-mingw32-gcc
 
       - name: Strip binary
@@ -75,3 +78,5 @@ jobs:
           name: Build ${{ github.sha }}
           body: "Automated build from commit ${{ github.sha }}."
           files: artifacts/*/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
