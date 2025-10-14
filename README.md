@@ -12,17 +12,19 @@ Pomodoro and ToDo application, inspired by [pomofocus.io](https://pomofocus.io/)
 
 ## Installation
 
+Compile and run from the source:
+
 ```bash
 cargo run --release
 ```
 
-For smaller, stripped binary:
+Or install the standalone binary:
 
 ```bash
-cargo build --release
-cargo strip
-cargo run --release
+cargo-binstall icemodoro
 ```
+
+> Note: Download is available on 64-bit Linux (glibc), Intel or Apple Silicon Macs (via Rosetta), and 64-bit Windows PCs (GNU toolchain).
 
 ## Shortcuts
 
