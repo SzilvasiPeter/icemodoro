@@ -73,8 +73,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
       - name: Download all build artifacts
         uses: actions/download-artifact@v4
         with:
@@ -84,11 +82,3 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: artifacts/*/*
-
-      - name: Run release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
