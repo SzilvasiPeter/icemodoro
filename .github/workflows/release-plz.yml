@@ -2,8 +2,8 @@ name: Release-plz
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
 
 jobs:
   release-plz-release:
