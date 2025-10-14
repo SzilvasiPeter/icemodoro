@@ -135,7 +135,7 @@ impl App {
 
         let tab_sub = iced::keyboard::on_key_press(|key, modifiers| match key.as_ref() {
             Key::Named(Named::Tab) if modifiers.shift() => Some(Message::NavigateTabBackward),
-            Key::Named(Named::Tab) => Some(Message::NavigateTabForward),
+            Key::Named(Named::Tab) if modifiers.control() => Some(Message::NavigateTabForward),
             _ => None,
         });
 

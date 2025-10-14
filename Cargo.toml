@@ -9,7 +9,7 @@ license = "MIT"
 keywords = ["iced", "ui", "pomodoro", "todo"]
 
 [dependencies]
-iced = { version = "0.13.1", default-features = false, features = ["wgpu", "smol", "image"] }
+iced = { version = "0.13.1", default-features = false, features = ["tiny-skia", "smol", "image"] }
 iced_aw = { version = "0.12.2", features = ["number_input", "tabs"] }
 
 # Used for sending desktop notifications (timer completion alerts)

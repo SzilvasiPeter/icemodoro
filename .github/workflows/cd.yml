@@ -51,16 +51,13 @@ jobs:
       - name: Strip binary
         run: cargo strip --target ${{ matrix.target }}
 
-      - name: Rename the binary
-        run: mv target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }} ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
-
       - name: Archive binary
         run: |
           mkdir dist
           if [[ "${{ matrix.suffix }}" == ".exe" ]]; then
-            zip dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.zip ${{ env.PROJECT_NAME }}-${{ matrix.target }}${{ matrix.suffix }}
+            zip dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.zip target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
           else
-            tar -czf dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.tar.gz ${{ env.PROJECT_NAME }}-${{ matrix.target }}
+            tar -czf dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.tar.gz target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
           fi
 
       - name: Upload artifact

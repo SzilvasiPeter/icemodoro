@@ -38,5 +38,5 @@ cargo run --release
 | **e** | Edit active task |
 | **d** | Delete active task |
 | **x** | End day (generates daily report) |
-| **Tab** | Next tab |
+| **Ctrl + Tab** | Next tab |
 | **Shift + Tab** | Previous tab |

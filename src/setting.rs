@@ -202,7 +202,7 @@ impl Settings {
     /// View section listing all keyboard shortcuts available in the app.
     fn view_shortcuts<'a>() -> Element<'a, Message> {
         let shortcut_row = |key, desc| -> iced::widget::Row<'a, Message> {
-            row![text(key).font(iced::Font::MONOSPACE).width(150), text(desc)].spacing(10)
+            row![text(key).font(iced::Font::MONOSPACE).width(200), text(desc)].spacing(10)
         };
 
         let content = column![
@@ -218,7 +218,7 @@ impl Settings {
             shortcut_row("s", "Complete active task"),
             shortcut_row("d", "Delete active task"),
             shortcut_row("x", "End day"),
-            shortcut_row("Tab", "Next tab"),
+            shortcut_row("Ctrl + Tab", "Next tab"),
             shortcut_row("Shift + Tab", "Previous tab"),
         ]
         .spacing(10);
