@@ -55,9 +55,9 @@ jobs:
         run: |
           mkdir dist
           if [[ "${{ matrix.suffix }}" == ".exe" ]]; then
-            zip dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.zip target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
+            zip -j dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.zip target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
           else
-            tar -czf dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.tar.gz target/${{ matrix.target }}/release/${{ env.PROJECT_NAME }}${{ matrix.suffix }}
+            tar -czf dist/${{ env.PROJECT_NAME }}-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release ${{ env.PROJECT_NAME }}${{ matrix.suffix }}
           fi
 
       - name: Upload artifact
