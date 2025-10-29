@@ -8,6 +8,20 @@ use iced_aw::widget::number_input;
 
 use serde::{Deserialize, Serialize};
 
+/// List of all available themes and their display names, used in UI rendering.
+const ALL_THEMES: [(&str, AppTheme); 10] = [
+    ("Catppuccin Frappe", AppTheme::CatppuccinFrappe),
+    ("Catppuccin Latte", AppTheme::CatppuccinLatte),
+    ("Dark", AppTheme::Dark),
+    ("Light", AppTheme::Light),
+    ("Gruvbox Dark", AppTheme::GruvboxDark),
+    ("Gruvbox Light", AppTheme::GruvboxLight),
+    ("Solarized Dark", AppTheme::SolarizedDark),
+    ("Solarized Light", AppTheme::SolarizedLight),
+    ("TokyoNight Storm", AppTheme::TokyoNightStorm),
+    ("TokyoNight Light", AppTheme::TokyoNightLight),
+];
+
 /// Defines the color themes available in the application.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum AppTheme {
@@ -40,20 +54,6 @@ impl AppTheme {
         }
     }
 }
-
-/// List of all available themes and their display names, used in UI rendering.
-const ALL_THEMES: [(&str, AppTheme); 10] = [
-    ("Catppuccin Frappe", AppTheme::CatppuccinFrappe),
-    ("Catppuccin Latte", AppTheme::CatppuccinLatte),
-    ("Dark", AppTheme::Dark),
-    ("Light", AppTheme::Light),
-    ("Gruvbox Dark", AppTheme::GruvboxDark),
-    ("Gruvbox Light", AppTheme::GruvboxLight),
-    ("Solarized Dark", AppTheme::SolarizedDark),
-    ("Solarized Light", AppTheme::SolarizedLight),
-    ("TokyoNight Storm", AppTheme::TokyoNightStorm),
-    ("TokyoNight Light", AppTheme::TokyoNightLight),
-];
 
 /// Indicates which session type a setting applies to.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

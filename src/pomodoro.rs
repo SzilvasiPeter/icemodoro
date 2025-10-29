@@ -11,7 +11,18 @@ use iced::widget::{
 use iced::{Center, Element, Length, Subscription, Theme};
 
 use notify_rust::Notification;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
+
+const SUMMARIES: [&str; 7] = [
+    "Stretch up high, touch the sky. Take a sip, stay fresh and spry.",
+    "Bend and sway, greet the day. Drink your water, wash fatigue away.",
+    "Twist with grace, find your space. Sip some water, keep your pace.",
+    "Reach and glide, open wide. Hydrate well, feel joy inside.",
+    "Roll your neck, take a sec. Drink your water, keep your check.",
+    "Stretch with cheer, far and near. Take a sip, refresh your gear.",
+    "Wiggle free, breathe with glee. Sip your water, let it be.",
+];
 
 /// Represents a single task in the to-do list.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -334,9 +345,10 @@ impl Pomodoro {
                     self.remaining = duration;
                 } else {
                     self.remaining = Duration::ZERO;
+                    let summary_index = rand::rng().random_range(0..SUMMARIES.len());
                     let _ = Notification::new()
                         .sound_name("alarm-clock-elapsed")
-                        .summary("Time is over!")
+                        .summary(SUMMARIES[summary_index])
                         .show();
                     self.state = State::Overtime { last_tick: now };
                 }
