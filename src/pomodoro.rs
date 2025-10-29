@@ -14,7 +14,7 @@ use notify_rust::Notification;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-const BREAKS_SUMMARIES: [&str; 7] = [
+const BREAK_SUMMARIES: [&str; 7] = [
     "Stretch up high, touch the sky. Take a sip, stay fresh and spry.",
     "Bend and sway, greet the day. Drink your water, wash fatigue away.",
     "Twist with grace, find your space. Sip some water, keep your pace.",
@@ -363,10 +363,10 @@ impl Pomodoro {
                                 .show();
                         }
                         Session::Pomodoro => {
-                            let index = rand::rng().random_range(0..BREAKS_SUMMARIES.len());
+                            let index = rand::rng().random_range(0..BREAK_SUMMARIES.len());
                             let _ = Notification::new()
                                 .sound_name("alarm-clock-elapsed")
-                                .summary(BREAKS_SUMMARIES[index])
+                                .summary(BREAK_SUMMARIES[index])
                                 .show();
                         }
                     }
