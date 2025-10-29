@@ -1,6 +1,6 @@
 [package]
 name = "icemodoro"
-version = "0.1.3"
+version = "0.1.4"
 edition = "2024"
 description = "A simple Pomodoro and To-Do list application built with the Iced GUI library"
 repository = "https://github.com/SzilvasiPeter/icemodoro"

@@ -14,7 +14,7 @@ use notify_rust::Notification;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-const SUMMARIES: [&str; 7] = [
+const BREAK_SUMMARIES: [&str; 7] = [
     "Stretch up high, touch the sky. Take a sip, stay fresh and spry.",
     "Bend and sway, greet the day. Drink your water, wash fatigue away.",
     "Twist with grace, find your space. Sip some water, keep your pace.",
@@ -22,6 +22,16 @@ const SUMMARIES: [&str; 7] = [
     "Roll your neck, take a sec. Drink your water, keep your check.",
     "Stretch with cheer, far and near. Take a sip, refresh your gear.",
     "Wiggle free, breathe with glee. Sip your water, let it be.",
+];
+
+const WORK_SUMMARIES: [&str; 7] = [
+    "Shake off breaks and take your seat, make your tasks feel light and neat.",
+    "Stretch was sweet, now tap your keys, move with calm and gentle ease.",
+    "Sip was done, now face the day, let your work flow in a playful way.",
+    "Shake the rest from head to toe, dive in now and let ideas grow.",
+    "Mind refreshed, body bright, tackle tasks with all your might.",
+    "Take a breath, then start the grind, joy and focus you will find.",
+    "Break is gone, energy’s prime, back to work, it’s task time!",
 ];
 
 /// Represents a single task in the to-do list.
@@ -344,12 +354,23 @@ impl Pomodoro {
                 if let Some(duration) = expires.checked_duration_since(now) {
                     self.remaining = duration;
                 } else {
+                    match self.session {
+                        Session::Break => {
+                            let index = rand::rng().random_range(0..WORK_SUMMARIES.len());
+                            let _ = Notification::new()
+                                .sound_name("alarm-clock-elapsed")
+                                .summary(WORK_SUMMARIES[index])
+                                .show();
+                        }
+                        Session::Pomodoro => {
+                            let index = rand::rng().random_range(0..BREAK_SUMMARIES.len());
+                            let _ = Notification::new()
+                                .sound_name("alarm-clock-elapsed")
+                                .summary(BREAK_SUMMARIES[index])
+                                .show();
+                        }
+                    }
                     self.remaining = Duration::ZERO;
-                    let summary_index = rand::rng().random_range(0..SUMMARIES.len());
-                    let _ = Notification::new()
-                        .sound_name("alarm-clock-elapsed")
-                        .summary(SUMMARIES[summary_index])
-                        .show();
                     self.state = State::Overtime { last_tick: now };
                 }
             }
