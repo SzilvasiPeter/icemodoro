@@ -14,6 +14,7 @@ iced_aw = { version = "0.12.2", features = ["number_input", "tabs"] }
 
 # Used for sending desktop notifications (timer completion alerts)
 notify-rust = "4.11.7"
+rand = "0.9.2"
 
 # Required for persisting the application data
 serde = { version = "1.0", features = ["derive"] }
