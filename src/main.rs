@@ -62,6 +62,7 @@ impl Default for App {
         let pomodoro = Pomodoro::new(
             settings.work_min,
             settings.break_min,
+            settings.long_break_min,
             settings.work_theme.to_iced_theme(),
             settings.break_theme.to_iced_theme(),
         );
