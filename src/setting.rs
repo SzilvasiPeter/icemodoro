@@ -1,7 +1,5 @@
 //! Manages application settings, including themes, timer durations, and keyboard shortcuts.
 
-use std::collections::btree_map::ValuesMut;
-
 use super::persistence;
 
 use iced::widget::{button, column, container, horizontal_rule, radio, row, scrollable, text};
@@ -62,7 +60,6 @@ impl AppTheme {
 pub enum SessionType {
     Pomodoro,
     Break,
-    LongBreak,
 }
 
 /// Stores user-configurable settings for session durations and themes.
@@ -71,6 +68,7 @@ pub struct Settings {
     pub work_min: u8,
     pub break_min: u8,
     pub long_break_min: u8,
+    pub long_break_after: u8,
     pub work_theme: AppTheme,
     pub break_theme: AppTheme,
 }
@@ -80,7 +78,8 @@ impl Default for Settings {
         Self {
             work_min: 25,
             break_min: 5,
-            long_break_min: 60,
+            long_break_min: 20,
+            long_break_after: 4,
             work_theme: AppTheme::SolarizedDark,
             break_theme: AppTheme::SolarizedLight,
         }
@@ -93,6 +92,7 @@ pub enum Message {
     PomodoroChanged(u8),
     BreakChanged(u8),
     LongBreakChanged(u8),
+    LongBreakAfterChanged(u8),
     ThemeChanged(SessionType, AppTheme),
     Submit,
 }
@@ -109,10 +109,10 @@ impl Settings {
             Message::PomodoroChanged(value) => self.work_min = value,
             Message::BreakChanged(value) => self.break_min = value,
             Message::LongBreakChanged(value) => self.long_break_min = value,
+            Message::LongBreakAfterChanged(value) => self.long_break_after = value,
             Message::ThemeChanged(session, theme) => match session {
                 SessionType::Pomodoro => self.work_theme = theme,
                 SessionType::Break => self.break_theme = theme,
-                SessionType::LongBreak => self.break_theme = theme,
             },
             Message::Submit => {
                 let _ = persistence::save("settings.json", &self);
@@ -150,11 +150,17 @@ impl Settings {
                     number_input(&self.break_min, 1..=60, Message::BreakChanged)
                 ],
                 column![
-                    text("long break"),
-                    number_input(&self.break_min, 1..=60, Message::LongBreakChanged)
-                ]
+                    text("Long break"),
+                    number_input(&self.long_break_min, 1..=120, Message::LongBreakChanged)
+                ],
             ]
             .spacing(20),
+            text("Long break after"),
+            number_input(
+                &self.long_break_after,
+                1..=20,
+                Message::LongBreakAfterChanged
+            )
         ]
         .spacing(10)
         .into()

@@ -59,10 +59,14 @@ pub struct Pomodoro {
     //-- Settings --//
     /// Duration of a work session.
     work_dur: Duration,
+    /// The current number of finished work session.
+    work_count: u8,
     /// Duration of a break session.
     break_dur: Duration,
     /// Duration of long break session.
-    long_break_dur:Duration,
+    long_break_dur: Duration,
+    /// Number of work session to start long break.
+    long_break_after: u8,
     /// Theme used during work sessions.
     work_theme: Theme,
     /// Theme used during break sessions.
@@ -158,10 +162,17 @@ impl Pomodoro {
     /// Initializes a new `Pomodoro` state with configured durations and themes.
     ///
     /// It also loads any existing tasks from persistent storage.
-    pub fn new(work_min: u8, break_min: u8, long_break_min: u8, work_theme: Theme, break_theme: Theme) -> Self {
+    pub fn new(
+        work_min: u8,
+        break_min: u8,
+        long_break_min: u8,
+        long_break_after: u8,
+        work_theme: Theme,
+        break_theme: Theme,
+    ) -> Self {
         let work_duration = Duration::from_secs(u64::from(work_min) * 60);
         let break_duration = Duration::from_secs(u64::from(break_min) * 60);
-        let long_break_duration=Duration::from_secs(u64::from(long_break_min) * 60);
+        let long_break_duration = Duration::from_secs(u64::from(long_break_min) * 60);
         let tasks: Vec<Task> = persistence::load("tasks.json").unwrap_or_default();
         let active = tasks.iter().find(|t| !t.done).map(|t| t.id);
 
@@ -170,8 +181,10 @@ impl Pomodoro {
 
         Self {
             work_dur: work_duration,
+            work_count: 0,
             break_dur: break_duration,
-            long_break_dur:long_break_duration,
+            long_break_dur: long_break_duration,
+            long_break_after,
             work_theme: work_theme.clone(),
             break_theme,
             remaining: work_duration,
@@ -201,8 +214,7 @@ impl Pomodoro {
             self.reset_duration();
             self.theme = match self.session {
                 Session::Pomodoro => self.work_theme.clone(),
-                Session::Break => self.break_theme.clone(),
-                Session::LongBreak => self.break_theme.clone(),
+                Session::Break | Session::LongBreak => self.break_theme.clone(),
             };
         }
     }
@@ -346,7 +358,10 @@ impl Pomodoro {
 
     /// Returns the title for the Pomodoro tab, indicating the current session.
     pub fn tab_title(&self) -> String {
-        format!("{:?}", self.session)
+        match self.session {
+            Session::LongBreak => "Long Break".to_string(),
+            Session::Pomodoro | Session::Break => format!("{:?}", self.session),
+        }
     }
 
     /// Returns the currently active theme.
@@ -362,15 +377,12 @@ impl Pomodoro {
                     self.remaining = duration;
                 } else {
                     match self.session {
-                        Session::Break => {
+                        Session::Break | Session::LongBreak => {
                             let index = rand::rng().random_range(0..WORK_SUMMARIES.len());
                             let _ = Notification::new()
                                 .sound_name("alarm-clock-elapsed")
                                 .summary(WORK_SUMMARIES[index])
                                 .show();
-                        }
-                        Session::LongBreak => {
-                            let index:usize=rand::rng().random_range(0..WORK_SUMMARIES.len());
                         }
                         Session::Pomodoro => {
                             let index = rand::rng().random_range(0..BREAK_SUMMARIES.len());
@@ -408,20 +420,22 @@ impl Pomodoro {
             if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
                 task.spent = task.spent.saturating_add(time_spent);
             }
+            self.work_count += 1;
         }
 
         self.session = match self.session {
+            Session::Pomodoro if self.work_count >= self.long_break_after => {
+                self.work_count = 0;
+                self.theme = self.break_theme.clone();
+                Session::LongBreak
+            }
             Session::Pomodoro => {
                 self.theme = self.break_theme.clone();
                 Session::Break
             }
-            Session::Break => {
+            Session::Break | Session::LongBreak => {
                 self.theme = self.work_theme.clone();
                 Session::Pomodoro
-            }
-            Session::LongBreak => {
-                self.theme = self.work_theme.clone();
-                Session::LongBreak
             }
         };
         self.reset_duration();

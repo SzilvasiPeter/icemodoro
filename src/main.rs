@@ -63,6 +63,7 @@ impl Default for App {
             settings.work_min,
             settings.break_min,
             settings.long_break_min,
+            settings.long_break_after,
             settings.work_theme.to_iced_theme(),
             settings.break_theme.to_iced_theme(),
         );
