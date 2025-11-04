@@ -59,8 +59,14 @@ pub struct Pomodoro {
     //-- Settings --//
     /// Duration of a work session.
     work_dur: Duration,
+    /// The current number of finished work session.
+    work_count: u8,
     /// Duration of a break session.
     break_dur: Duration,
+    /// Duration of long break session.
+    long_break_dur: Duration,
+    /// Number of work session to start long break.
+    long_break_after: u8,
     /// Theme used during work sessions.
     work_theme: Theme,
     /// Theme used during break sessions.
@@ -143,6 +149,7 @@ enum State {
 enum Session {
     Pomodoro,
     Break,
+    LongBreak,
 }
 
 /// Used to indicate direction for moving the active task selection.
@@ -155,9 +162,17 @@ impl Pomodoro {
     /// Initializes a new `Pomodoro` state with configured durations and themes.
     ///
     /// It also loads any existing tasks from persistent storage.
-    pub fn new(work_min: u8, break_min: u8, work_theme: Theme, break_theme: Theme) -> Self {
-        let work_duration = Duration::from_secs(u64::from(work_min) * 60);
-        let break_duration = Duration::from_secs(u64::from(break_min) * 60);
+    pub fn new(
+        work_min: u8,
+        break_min: u8,
+        long_break_min: u8,
+        long_break_after: u8,
+        work_theme: Theme,
+        break_theme: Theme,
+    ) -> Self {
+        let work_dur = Duration::from_secs(u64::from(work_min) * 60);
+        let break_dur = Duration::from_secs(u64::from(break_min) * 60);
+        let long_break_dur = Duration::from_secs(u64::from(long_break_min) * 60);
         let tasks: Vec<Task> = persistence::load("tasks.json").unwrap_or_default();
         let active = tasks.iter().find(|t| !t.done).map(|t| t.id);
 
@@ -165,13 +180,16 @@ impl Pomodoro {
         let next_id = tasks.iter().max_by_key(|t| t.id).map_or(1, |t| t.id + 1);
 
         Self {
-            work_dur: work_duration,
-            break_dur: break_duration,
+            work_dur,
+            work_count: 0,
+            break_dur,
+            long_break_dur,
+            long_break_after,
             work_theme: work_theme.clone(),
             break_theme,
-            remaining: work_duration,
+            remaining: work_dur,
             overtime: Duration::ZERO,
-            last_done: work_duration,
+            last_done: work_dur,
             state: State::Idle,
             session: Session::Pomodoro,
             theme: work_theme,
@@ -196,7 +214,7 @@ impl Pomodoro {
             self.reset_duration();
             self.theme = match self.session {
                 Session::Pomodoro => self.work_theme.clone(),
-                Session::Break => self.break_theme.clone(),
+                Session::Break | Session::LongBreak => self.break_theme.clone(),
             };
         }
     }
@@ -329,6 +347,7 @@ impl Pomodoro {
         let max_range = match self.session {
             Session::Pomodoro => self.work_dur,
             Session::Break => self.break_dur,
+            Session::LongBreak => self.long_break_dur,
         };
         let progress = progress_bar(0.0..=max_range.as_secs_f32(), self.remaining.as_secs_f32());
         column![progress.height(1), self.view_timer(), self.view_tasks()]
@@ -339,7 +358,10 @@ impl Pomodoro {
 
     /// Returns the title for the Pomodoro tab, indicating the current session.
     pub fn tab_title(&self) -> String {
-        format!("{:?}", self.session)
+        match self.session {
+            Session::LongBreak => "Long Break".to_string(),
+            Session::Pomodoro | Session::Break => format!("{:?}", self.session),
+        }
     }
 
     /// Returns the currently active theme.
@@ -355,7 +377,7 @@ impl Pomodoro {
                     self.remaining = duration;
                 } else {
                     match self.session {
-                        Session::Break => {
+                        Session::Break | Session::LongBreak => {
                             let index = rand::rng().random_range(0..WORK_SUMMARIES.len());
                             let _ = Notification::new()
                                 .sound_name("alarm-clock-elapsed")
@@ -398,14 +420,20 @@ impl Pomodoro {
             if let Some(task) = self.tasks.iter_mut().find(|task| task.id == id) {
                 task.spent = task.spent.saturating_add(time_spent);
             }
+            self.work_count += 1;
         }
 
         self.session = match self.session {
+            Session::Pomodoro if self.work_count >= self.long_break_after => {
+                self.work_count = 0;
+                self.theme = self.break_theme.clone();
+                Session::LongBreak
+            }
             Session::Pomodoro => {
                 self.theme = self.break_theme.clone();
                 Session::Break
             }
-            Session::Break => {
+            Session::Break | Session::LongBreak => {
                 self.theme = self.work_theme.clone();
                 Session::Pomodoro
             }
@@ -418,6 +446,7 @@ impl Pomodoro {
         self.remaining = match self.session {
             Session::Pomodoro => self.work_dur,
             Session::Break => self.break_dur,
+            Session::LongBreak => self.long_break_dur,
         };
         self.last_done = self.remaining;
         self.overtime = Duration::ZERO;
