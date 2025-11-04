@@ -170,9 +170,9 @@ impl Pomodoro {
         work_theme: Theme,
         break_theme: Theme,
     ) -> Self {
-        let work_duration = Duration::from_secs(u64::from(work_min) * 60);
-        let break_duration = Duration::from_secs(u64::from(break_min) * 60);
-        let long_break_duration = Duration::from_secs(u64::from(long_break_min) * 60);
+        let work_dur = Duration::from_secs(u64::from(work_min) * 60);
+        let break_dur = Duration::from_secs(u64::from(break_min) * 60);
+        let long_break_dur = Duration::from_secs(u64::from(long_break_min) * 60);
         let tasks: Vec<Task> = persistence::load("tasks.json").unwrap_or_default();
         let active = tasks.iter().find(|t| !t.done).map(|t| t.id);
 
@@ -180,16 +180,16 @@ impl Pomodoro {
         let next_id = tasks.iter().max_by_key(|t| t.id).map_or(1, |t| t.id + 1);
 
         Self {
-            work_dur: work_duration,
+            work_dur,
             work_count: 0,
-            break_dur: break_duration,
-            long_break_dur: long_break_duration,
+            break_dur,
+            long_break_dur,
             long_break_after,
             work_theme: work_theme.clone(),
             break_theme,
-            remaining: work_duration,
+            remaining: work_dur,
             overtime: Duration::ZERO,
-            last_done: work_duration,
+            last_done: work_dur,
             state: State::Idle,
             session: Session::Pomodoro,
             theme: work_theme,
